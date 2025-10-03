@@ -423,6 +423,6 @@ Este projeto é de código aberto e está disponível para fins educacionais.
 
 <div align="center">
 
-**Desenvolvido com ❤️ para aprendizado de Angular e Docker**
+**Desenvolvido com 🧠 para aprendizado de Angular e Docker**
 
 </div>
