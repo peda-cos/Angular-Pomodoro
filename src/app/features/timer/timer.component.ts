@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AudioService } from '../../core/services/audio.service';

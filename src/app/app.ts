@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { KeyboardShortcutService } from './core/services/keyboard-shortcut.service';
 

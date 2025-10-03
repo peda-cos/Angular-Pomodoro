@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Task } from '../../core/models/task.model';
 import { TaskService } from '../../core/services/task.service';
