@@ -74,12 +74,22 @@ export class KeyboardShortcutService implements OnDestroy {
 
   private findMatchingShortcut(keyboardEvent: KeyboardEvent): KeyboardShortcut | undefined {
     return this.shortcutsSignal().find((shortcut) => {
-      const keyMatches = shortcut.key.toLowerCase() === keyboardEvent.key.toLowerCase();
-      const ctrlMatches = shortcut.modifiers?.ctrl ? keyboardEvent.ctrlKey : !keyboardEvent.ctrlKey;
-      const altMatches = shortcut.modifiers?.alt ? keyboardEvent.altKey : !keyboardEvent.altKey;
-      const shiftMatches = shortcut.modifiers?.shift ? keyboardEvent.shiftKey : !keyboardEvent.shiftKey;
+      const pressedKey = keyboardEvent.key.toLowerCase();
+      const shortcutKey = shortcut.key.toLowerCase();
+      const keyMatches = pressedKey === shortcutKey;
 
-      return keyMatches && ctrlMatches && altMatches && shiftMatches;
+      const requiresCtrlKey = shortcut.modifiers?.ctrl ?? false;
+      const ctrlKeyStateMatches = requiresCtrlKey === keyboardEvent.ctrlKey;
+
+      const requiresAltKey = shortcut.modifiers?.alt ?? false;
+      const altKeyStateMatches = requiresAltKey === keyboardEvent.altKey;
+
+      const requiresShiftKey = shortcut.modifiers?.shift ?? false;
+      const shiftKeyStateMatches = requiresShiftKey === keyboardEvent.shiftKey;
+
+      const allModifiersMatch = ctrlKeyStateMatches && altKeyStateMatches && shiftKeyStateMatches;
+
+      return keyMatches && allModifiersMatch;
     });
   }
 
