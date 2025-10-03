@@ -1,0 +1,40 @@
+services:
+  pomodoro-timer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pomodoro-timer:latest
+    container_name: pomodoro-timer
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "com.pomodoro.description=Pomodoro Timer PWA"
+      - "com.pomodoro.version=1.0.0"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    # Security options
+    security_opt:
+      - no-new-privileges:true
