@@ -1,0 +1,177 @@
+<div class="timer-container">
+  <div class="timer-header">
+    <h2 class="session-label">{{ sessionLabel() }}</h2>
+    <div class="session-count" *ngIf="timerState().sessionType === 'work'">
+      Session {{ timerState().completedSessions + 1 }}
+    </div>
+  </div>
+
+  <div class="circular-progress">
+    <svg
+      class="progress-ring"
+      width="320"
+      height="320"
+      role="img"
+      [attr.aria-label]="'Timer progress: ' + progressPercentage() + ' percent'"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <circle
+        class="progress-ring-circle-bg"
+        cx="160"
+        cy="160"
+        r="140"
+        fill="none"
+        stroke="var(--color-border)"
+        stroke-width="12"
+      />
+      <circle
+        class="progress-ring-circle"
+        cx="160"
+        cy="160"
+        r="140"
+        fill="none"
+        [attr.stroke]="getProgressColor()"
+        stroke-width="12"
+        stroke-linecap="round"
+        [attr.stroke-dasharray]="circleStrokeDasharray()"
+        [attr.stroke-dashoffset]="circleStrokeDashoffset()"
+        transform="rotate(-90 160 160)"
+      />
+    </svg>
+
+    <div class="timer-display">
+      <div
+        class="time"
+        role="timer"
+        [attr.aria-valuenow]="timerState().remainingSeconds"
+        [attr.aria-valuemin]="0"
+        [attr.aria-valuemax]="timerState().totalSeconds"
+      >
+        {{ formattedTime() }}
+      </div>
+    </div>
+  </div>
+
+  <div class="timer-controls">
+    <button
+      class="btn btn-icon btn-secondary"
+      (click)="reset()"
+      [disabled]="isIdle()"
+      aria-label="Reset timer"
+      title="Reset (R)"
+    >
+      <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+        <path
+          d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+        />
+      </svg>
+    </button>
+
+    <button
+      class="btn btn-primary btn-large"
+      (click)="togglePlayPause()"
+      [attr.aria-label]="isRunning() ? 'Pause timer' : 'Start timer'"
+      [title]="isRunning() ? 'Pause (Space)' : 'Start (Space)'"
+    >
+      <svg *ngIf="!isRunning()" width="32" height="32" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M8 5v14l11-7z" />
+      </svg>
+      <svg *ngIf="isRunning()" width="32" height="32" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+      </svg>
+    </button>
+
+    <button
+      class="btn btn-icon btn-secondary"
+      (click)="skip()"
+      [disabled]="isIdle()"
+      aria-label="Skip to next session"
+      title="Skip (N)"
+    >
+      <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="session-info" role="status" aria-live="polite">
+    @if (timerState().sessionType === 'work') {
+    <div class="task-association">
+      @if (currentTask()) {
+      <div class="current-task">
+        <span class="task-icon">📝</span>
+        <span class="task-title">{{ currentTask()?.title }}</span>
+        <button
+          class="btn btn-icon-small"
+          (click)="toggleTaskSelector()"
+          aria-label="Change task"
+          title="Change task"
+        >
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2l-5.5 9h11z" />
+            <path d="M17.5 13h-11l5.5 9z" />
+          </svg>
+        </button>
+      </div>
+      } @else {
+      <button class="btn btn-text" (click)="toggleTaskSelector()" aria-label="Select a task">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg>
+        <span>Select a task</span>
+      </button>
+      } @if (isShowingTaskSelector()) {
+      <div class="task-selector-dropdown">
+        <div class="dropdown-header">
+          <span>Select Task</span>
+          <button
+            class="btn btn-icon-small"
+            (click)="isShowingTaskSelector.set(false)"
+            aria-label="Close"
+          >
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="dropdown-content">
+          @if (activeTasks().length === 0) {
+          <div class="empty-state">
+            <p>No active tasks</p>
+            <a routerLink="/tasks" class="btn btn-text-small">Go to Tasks</a>
+          </div>
+          } @else {
+          <div class="task-list-dropdown">
+            @for (task of activeTasks(); track task.id) {
+            <div
+              class="task-item"
+              [class.selected]="task.id === currentTaskId()"
+              (click)="selectTaskForSession(task.id)"
+            >
+              <span class="task-title">{{ task.title }}</span>
+              @if (task.pomodorosCompleted > 0) {
+              <span class="task-count">🍅 {{ task.pomodorosCompleted }}</span>
+              }
+            </div>
+            }
+          </div>
+          @if (currentTaskId()) {
+          <button class="btn btn-text-small clear-selection" (click)="clearTaskSelection()">
+            Clear selection
+          </button>
+          } }
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <p class="session-description">
+      @switch (timerState().sessionType) { @case ('short-break') { <span>Take a short break</span> }
+      @case ('long-break') { <span>Enjoy your long break</span> } }
+    </p>
+    }
+  </div>
+</div>
