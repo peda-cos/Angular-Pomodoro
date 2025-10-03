@@ -412,7 +412,7 @@ Este projeto é de código aberto e está disponível para fins educacionais.
 - [Standalone Components](https://angular.dev/guide/components/importing)
 
 ### Técnica Pomodoro
-- [Pomodoro Technique®](https://francescocirillo.com/pages/pomodoro-technique)
+- [Pomodoro Technique](https://pt.wikipedia.org/wiki/T%C3%A9cnica_pomodoro)
 
 ### Docker
 - [Docker Documentation](https://docs.docker.com/)
