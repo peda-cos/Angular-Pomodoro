@@ -1,4 +1,4 @@
-import { computed, effect, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { PomodoroSettings } from '../models/pomodoro-settings.model';
 import { SessionRecord } from '../models/session-record.model';
 import {
@@ -19,6 +19,9 @@ const SECONDS_PER_MINUTE = 60;
   providedIn: 'root',
 })
 export class TimerService {
+  private storageService = inject(StorageService);
+  private historyService = inject(HistoryService);
+
   private readonly timerStateSignal = signal<TimerState>({ ...INITIAL_TIMER_STATE });
   private countdownIntervalId: number | null = null;
   private sessionStartTimestamp = 0;
@@ -58,7 +61,7 @@ export class TimerService {
     return `${formattedMinutes}:${formattedSeconds}`;
   });
 
-  constructor(private storageService: StorageService, private historyService: HistoryService) {
+  constructor() {
     this.restorePersistedState();
     this.setupAutomaticStatePersistence();
   }

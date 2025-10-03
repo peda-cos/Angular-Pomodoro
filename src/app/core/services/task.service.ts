@@ -1,4 +1,4 @@
-import { computed, effect, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Task } from '../models/task.model';
 import { StorageService } from './storage.service';
 
@@ -8,6 +8,8 @@ const TASKS_STORAGE_KEY = 'tasks';
   providedIn: 'root',
 })
 export class TaskService {
+  private storage = inject(StorageService);
+
   private readonly tasksSignal = signal<Task[]>([]);
 
   readonly allTasks = this.tasksSignal.asReadonly();
@@ -16,7 +18,7 @@ export class TaskService {
 
   private recentlyDeletedTasks: Task[] = [];
 
-  constructor(private storage: StorageService) {
+  constructor() {
     this.loadTasksFromStorage();
 
     effect(() => {

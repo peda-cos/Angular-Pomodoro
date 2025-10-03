@@ -1,4 +1,4 @@
-import { computed, effect, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { DEFAULT_THEMES, ThemeDefinition } from '../models/theme.model';
 import { StorageService } from './storage.service';
 
@@ -9,6 +9,8 @@ const CUSTOM_THEMES_STORAGE_KEY = 'custom_themes';
   providedIn: 'root',
 })
 export class ThemeService {
+  private storage = inject(StorageService);
+
   private readonly currentThemeIdSignal = signal<string>('default');
   private readonly customThemesSignal = signal<ThemeDefinition[]>([]);
   private readonly systemPrefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
@@ -20,7 +22,7 @@ export class ThemeService {
     return this.allThemes().find((theme) => theme.id === themeId) || DEFAULT_THEMES[0];
   });
 
-  constructor(private storage: StorageService) {
+  constructor() {
     this.loadCurrentThemeFromStorage();
     this.loadCustomThemesFromStorage();
     this.watchSystemThemePreference();

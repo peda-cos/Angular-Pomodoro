@@ -1,4 +1,4 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { SessionRecord } from '../models/session-record.model';
 import { StorageService } from './storage.service';
 
@@ -9,6 +9,8 @@ const MAXIMUM_HISTORY_RECORDS = 1000;
   providedIn: 'root',
 })
 export class HistoryService {
+  private storage = inject(StorageService);
+
   private readonly sessionHistorySignal = signal<SessionRecord[]>([]);
 
   readonly allSessions = this.sessionHistorySignal.asReadonly();
@@ -19,7 +21,7 @@ export class HistoryService {
     );
   });
 
-  constructor(private storage: StorageService) {
+  constructor() {
     this.loadHistoryFromStorage();
   }
 

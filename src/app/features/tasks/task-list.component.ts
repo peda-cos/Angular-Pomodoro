@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Task } from '../../core/models/task.model';
 import { TaskService } from '../../core/services/task.service';
@@ -7,10 +7,10 @@ import { TimerService } from '../../core/services/timer.service';
 
 @Component({
   selector: 'app-task-list',
-  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './task-list.component.html',
   styleUrls: ['./task-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TaskListComponent implements OnInit, OnDestroy {
   private taskService = inject(TaskService);

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AudioService } from '../../core/services/audio.service';
@@ -12,10 +12,10 @@ import { WakeLockService } from '../../core/services/wake-lock.service';
 
 @Component({
   selector: 'app-timer',
-  standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './timer.component.html',
   styleUrls: ['./timer.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimerComponent implements OnInit, OnDestroy {
   private timerService = inject(TimerService);

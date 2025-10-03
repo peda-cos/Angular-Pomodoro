@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AudioService } from '../../core/services/audio.service';
 import { SettingsService } from '../../core/services/settings.service';
@@ -7,10 +7,10 @@ import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-settings',
-  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent {
   private settingsService = inject(SettingsService);

@@ -1,4 +1,4 @@
-import { computed, effect, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { DEFAULT_SETTINGS, PomodoroSettings } from '../models/pomodoro-settings.model';
 import { StorageService } from './storage.service';
 
@@ -8,6 +8,8 @@ const SETTINGS_STORAGE_KEY = 'settings';
   providedIn: 'root',
 })
 export class SettingsService {
+  private storage = inject(StorageService);
+
   private readonly settingsSignal = signal<PomodoroSettings>({ ...DEFAULT_SETTINGS });
 
   readonly currentSettings = this.settingsSignal.asReadonly();
@@ -20,7 +22,7 @@ export class SettingsService {
   readonly themeId = computed(() => this.settingsSignal().themeId);
   readonly fontFamily = computed(() => this.settingsSignal().fontFamily);
 
-  constructor(private storage: StorageService) {
+  constructor() {
     this.loadSettingsFromStorage();
 
     effect(() => {

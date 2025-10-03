@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { StatisticsService } from '../../core/services/statistics.service';
 
 @Component({
   selector: 'app-statistics',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './statistics.component.html',
   styleUrls: ['./statistics.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatisticsComponent {
   private statisticsService = inject(StatisticsService);

@@ -1,4 +1,4 @@
-import { effect, Injectable, OnDestroy, signal } from '@angular/core';
+import { effect, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import {
   DEFAULT_SHORTCUTS,
   KeyboardShortcut,
@@ -14,6 +14,8 @@ export type ShortcutHandler = () => void;
   providedIn: 'root',
 })
 export class KeyboardShortcutService implements OnDestroy {
+  private storage = inject(StorageService);
+
   private readonly shortcutsSignal = signal<KeyboardShortcut[]>([...DEFAULT_SHORTCUTS]);
   private readonly shortcutHandlerRegistry = new Map<ShortcutAction, ShortcutHandler>();
   private readonly isEnabledSignal = signal(true);
@@ -22,7 +24,7 @@ export class KeyboardShortcutService implements OnDestroy {
   readonly allShortcuts = this.shortcutsSignal.asReadonly();
   readonly isEnabled = this.isEnabledSignal.asReadonly();
 
-  constructor(private storage: StorageService) {
+  constructor() {
     this.loadShortcutsFromStorage();
 
     this.keydownHandler = (event: KeyboardEvent) => this.handleKeydown(event);
