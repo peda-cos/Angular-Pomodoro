@@ -71,7 +71,7 @@ export class TimerComponent implements OnInit, OnDestroy {
   readonly isIdle = computed(() => this.timerState().status === 'idle');
 
   private previousTimerStatus = this.timerState().status;
-  private animationFrameId: number | null = null;
+  private sessionCompletionWatcherFrameId: number | null = null;
 
   ngOnInit(): void {
     if (this.isIdle()) {
@@ -91,23 +91,26 @@ export class TimerComponent implements OnInit, OnDestroy {
     this.keyboardService.unregisterHandler('skip-next');
     this.wakeLockService.release();
 
-    // Clean up animation frame to prevent memory leak
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
+    if (this.sessionCompletionWatcherFrameId !== null) {
+      cancelAnimationFrame(this.sessionCompletionWatcherFrameId);
+      this.sessionCompletionWatcherFrameId = null;
     }
   }
 
   private watchForSessionCompletion(): void {
-    const checkForCompletion = () => {
-      const currentTimerStatus = this.timerState().status;
-      if (currentTimerStatus === 'completed' && this.previousTimerStatus !== 'completed') {
-        this.handleSessionCompletion();
-      }
-      this.previousTimerStatus = currentTimerStatus;
-      this.animationFrameId = requestAnimationFrame(checkForCompletion);
-    };
-    this.animationFrameId = requestAnimationFrame(checkForCompletion);
+    if (this.sessionCompletionWatcherFrameId !== null) {
+      cancelAnimationFrame(this.sessionCompletionWatcherFrameId);
+      this.sessionCompletionWatcherFrameId = null;
+    }
+
+    if (this.timerState().remainingSeconds === 0 && this.previousTimerStatus === 'running') {
+      this.handleSessionCompletion();
+    }
+
+    this.previousTimerStatus = this.timerState().status;
+    this.sessionCompletionWatcherFrameId = requestAnimationFrame(() =>
+      this.watchForSessionCompletion()
+    );
   }
 
   private async handleSessionCompletion(): Promise<void> {
