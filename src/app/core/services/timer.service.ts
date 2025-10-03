@@ -58,10 +58,7 @@ export class TimerService {
     return `${formattedMinutes}:${formattedSeconds}`;
   });
 
-  constructor(
-    private storageService: StorageService,
-    private historyService: HistoryService
-  ) {
+  constructor(private storageService: StorageService, private historyService: HistoryService) {
     this.restorePersistedState();
     this.setupAutomaticStatePersistence();
   }
@@ -74,12 +71,19 @@ export class TimerService {
       return;
     }
 
-    const wasRunningBeforeReload = persistedTimerState.status === 'running' && persistedTimerState.sessionStartTime;
+    const wasRunningBeforeReload =
+      persistedTimerState.status === 'running' && persistedTimerState.sessionStartTime;
 
     if (wasRunningBeforeReload) {
-      const elapsedMillisecondsSinceStart = performance.now() - persistedTimerState.sessionStartTime!;
-      const elapsedSecondsSinceStart = Math.floor(elapsedMillisecondsSinceStart / MILLISECONDS_PER_SECOND);
-      const calculatedRemainingSeconds = Math.max(0, persistedTimerState.remainingSeconds - elapsedSecondsSinceStart);
+      const elapsedMillisecondsSinceStart =
+        performance.now() - persistedTimerState.sessionStartTime!;
+      const elapsedSecondsSinceStart = Math.floor(
+        elapsedMillisecondsSinceStart / MILLISECONDS_PER_SECOND
+      );
+      const calculatedRemainingSeconds = Math.max(
+        0,
+        persistedTimerState.remainingSeconds - elapsedSecondsSinceStart
+      );
       const sessionHasTimeRemaining = calculatedRemainingSeconds > 0;
 
       this.timerStateSignal.set({
@@ -181,7 +185,7 @@ export class TimerService {
   setTaskId(assignedTaskId: string | undefined): void {
     this.timerStateSignal.update((state) => ({
       ...state,
-      currentTaskId: assignedTaskId
+      currentTaskId: assignedTaskId,
     }));
   }
 
@@ -197,8 +201,13 @@ export class TimerService {
 
     this.countdownIntervalId = window.setInterval(() => {
       const elapsedMillisecondsSinceStart = performance.now() - this.sessionStartTimestamp;
-      const elapsedSecondsSinceStart = Math.floor(elapsedMillisecondsSinceStart / MILLISECONDS_PER_SECOND);
-      const calculatedRemainingSeconds = Math.max(0, this.sessionRemainingSecondsAtStart - elapsedSecondsSinceStart);
+      const elapsedSecondsSinceStart = Math.floor(
+        elapsedMillisecondsSinceStart / MILLISECONDS_PER_SECOND
+      );
+      const calculatedRemainingSeconds = Math.max(
+        0,
+        this.sessionRemainingSecondsAtStart - elapsedSecondsSinceStart
+      );
 
       const currentRemainingSeconds = this.timerStateSignal().remainingSeconds;
       const remainingSecondsHasChanged = calculatedRemainingSeconds !== currentRemainingSeconds;
@@ -264,7 +273,9 @@ export class TimerService {
     const sessionEndedAt = new Date().toISOString();
     const sessionStartTimestamp = new Date(this.activeSessionStartedAt!).getTime();
     const sessionEndTimestamp = new Date(sessionEndedAt).getTime();
-    const sessionDurationInSeconds = Math.floor((sessionEndTimestamp - sessionStartTimestamp) / MILLISECONDS_PER_SECOND);
+    const sessionDurationInSeconds = Math.floor(
+      (sessionEndTimestamp - sessionStartTimestamp) / MILLISECONDS_PER_SECOND
+    );
 
     const completedSessionRecord: SessionRecord = {
       id: this.activeSessionId!,
@@ -286,7 +297,7 @@ export class TimerService {
     sessionType: SessionType
   ): number {
     const durationMappings = {
-      'work': pomodoroSettings.workMinutes,
+      work: pomodoroSettings.workMinutes,
       'short-break': pomodoroSettings.shortBreakMinutes,
       'long-break': pomodoroSettings.longBreakMinutes,
     };
@@ -306,7 +317,8 @@ export class TimerService {
     }
 
     const upcomingCompletedSessionsCount = currentTimerState.completedSessions + 1;
-    const shouldTakeLongBreak = upcomingCompletedSessionsCount % pomodoroSettings.sessionsBeforeLongBreak === 0;
+    const shouldTakeLongBreak =
+      upcomingCompletedSessionsCount % pomodoroSettings.sessionsBeforeLongBreak === 0;
 
     return shouldTakeLongBreak ? 'long-break' : 'short-break';
   }
