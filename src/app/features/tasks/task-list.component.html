@@ -1,0 +1,199 @@
+<div class="task-list-container">
+  <div class="task-list-header">
+    <h2>Tasks</h2>
+    <button
+      class="btn btn-primary btn-sm"
+      (click)="showAddTaskForm()"
+      *ngIf="!isShowingAddTaskForm()"
+    >
+      <span class="icon">➕</span>
+      Add Task
+    </button>
+  </div>
+
+  <!-- Add Task Form -->
+  <div class="task-form" *ngIf="isShowingAddTaskForm()">
+    <input
+      type="text"
+      class="form-input"
+      placeholder="Task title"
+      [(ngModel)]="newTaskTitle"
+      (keydown.enter)="addTask()"
+      (keydown.escape)="cancelAddTask()"
+      required
+      autofocus
+    />
+    <textarea
+      class="form-input"
+      placeholder="Notes (optional)"
+      [(ngModel)]="newTaskNotes"
+      rows="2"
+    ></textarea>
+    <div class="form-actions">
+      <button class="btn btn-primary btn-sm" (click)="addTask()">Add Task</button>
+      <button class="btn btn-secondary btn-sm" (click)="cancelAddTask()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Active Tasks -->
+  <div class="tasks-section" *ngIf="hasActiveTasks()">
+    <h3 class="section-title">Active Tasks</h3>
+    <div class="task-list">
+      <div
+        *ngFor="let task of activeTasks(); trackBy: trackByTaskId"
+        class="task-item"
+        [class.task-selected]="isTaskSelected(task.id)"
+        [class.task-editing]="isTaskBeingEdited(task.id)"
+      >
+        <!-- View Mode -->
+        <div class="task-view" *ngIf="!isTaskBeingEdited(task.id)">
+          <div class="task-main" (click)="selectTaskForTimer(task.id)">
+            <div class="task-content">
+              <h4 class="task-title">{{ task.title }}</h4>
+              <p class="task-notes" *ngIf="task.notes">{{ task.notes }}</p>
+              <div class="task-stats">
+                <span class="stat"> 🍅 {{ task.pomodorosCompleted }} </span>
+                <span class="stat">
+                  ⏱️ {{ formatMinutesToReadableTime(task.totalFocusMinutes) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="task-actions">
+            <button
+              class="btn-icon"
+              (click)="toggleTaskComplete(task.id)"
+              aria-label="Mark as complete"
+              title="Complete"
+            >
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+              </svg>
+            </button>
+            <button
+              class="btn-icon"
+              (click)="startEditingTask(task)"
+              aria-label="Edit task"
+              title="Edit"
+            >
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                />
+              </svg>
+            </button>
+            <button
+              class="btn-icon"
+              (click)="deleteTask(task.id)"
+              aria-label="Delete task"
+              title="Delete"
+            >
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div class="task-edit" *ngIf="isTaskBeingEdited(task.id)">
+          <input
+            type="text"
+            class="form-input"
+            [(ngModel)]="editTaskTitle"
+            (keydown.enter)="saveEditedTask(task.id)"
+            (keydown.escape)="cancelEditTask()"
+            autofocus
+            aria-label="Edit task title"
+          />
+          <textarea
+            class="form-textarea"
+            [(ngModel)]="editTaskNotes"
+            rows="2"
+            aria-label="Edit task notes"
+          ></textarea>
+          <div class="form-actions">
+            <button class="btn btn-primary btn-sm" (click)="saveEditedTask(task.id)">Save</button>
+            <button class="btn btn-secondary btn-sm" (click)="cancelEditTask()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!hasActiveTasks() && !isShowingAddTaskForm()">
+    <svg width="64" height="64" fill="var(--color-text-secondary)" viewBox="0 0 24 24">
+      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+    </svg>
+    <p>No active tasks</p>
+    <button class="btn btn-primary" (click)="showAddTaskForm()">Add your first task</button>
+  </div>
+
+  <!-- Completed Tasks -->
+  <div class="tasks-section" *ngIf="hasCompletedTasks()">
+    <button class="section-toggle" (click)="toggleShowCompletedTasks()">
+      <svg
+        width="16"
+        height="16"
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        [style.transform]="isShowingCompletedTasks() ? 'rotate(90deg)' : 'rotate(0deg)'"
+      >
+        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z" />
+      </svg>
+      <span>Completed ({{ completedTasks().length }})</span>
+    </button>
+
+    <div class="task-list" *ngIf="isShowingCompletedTasks()">
+      <div
+        *ngFor="let task of completedTasks(); trackBy: trackByTaskId"
+        class="task-item task-completed"
+      >
+        <div class="task-view">
+          <div class="task-main">
+            <div class="task-content">
+              <h4 class="task-title">{{ task.title }}</h4>
+              <div class="task-stats">
+                <span class="stat">🍅 {{ task.pomodorosCompleted }}</span>
+                <span class="stat"
+                  >⏱️ {{ formatMinutesToReadableTime(task.totalFocusMinutes) }}</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="task-actions">
+            <button
+              class="btn-icon"
+              (click)="toggleTaskComplete(task.id)"
+              aria-label="Mark as incomplete"
+              title="Restore"
+            >
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                />
+              </svg>
+            </button>
+            <button
+              class="btn-icon"
+              (click)="deleteTask(task.id)"
+              aria-label="Delete task"
+              title="Delete"
+            >
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
