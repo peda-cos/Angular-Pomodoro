@@ -11,9 +11,10 @@ const CURRENT_SCHEMA_VERSION = 1;
 })
 export class StorageService {
   private readonly storageKeyPrefix = 'pomodoro_';
-  private readonly schemaVersionKey = `${this.storageKeyPrefix}version`;
-  private readonly migrationLockKey = `${this.storageKeyPrefix}migration_lock`;
-
+  private readonly CURRENT_SCHEMA_VERSION = 1;
+  private readonly SCHEMA_VERSION_KEY = 'schemaVersion';
+  private readonly CONCURRENT_MIGRATION_LOCK_KEY = 'migrationLock';
+  private readonly MIGRATION_LOCK_TIMEOUT_MILLISECONDS = 5000;
   constructor() {
     this.checkSchemaVersionAndMigrate();
   }
@@ -21,12 +22,12 @@ export class StorageService {
   private checkSchemaVersionAndMigrate(): void {
     const currentStoredVersion = this.getSchemaVersion();
     if (currentStoredVersion < CURRENT_SCHEMA_VERSION) {
-      if (this.acquireMigrationLock()) {
+      if (this.acquireConcurrentMigrationLock()) {
         try {
           this.migrateSchema(currentStoredVersion, CURRENT_SCHEMA_VERSION);
           this.setSchemaVersion(CURRENT_SCHEMA_VERSION);
         } finally {
-          this.releaseMigrationLock();
+          this.releaseConcurrentMigrationLock();
         }
       } else {
         setTimeout(() => {
@@ -39,33 +40,33 @@ export class StorageService {
     }
   }
 
-  private acquireMigrationLock(): boolean {
-    const lockValue = localStorage.getItem(this.migrationLockKey);
-    const now = Date.now();
+  private acquireConcurrentMigrationLock(): boolean {
+    const existingLockTimestamp = localStorage.getItem(this.CONCURRENT_MIGRATION_LOCK_KEY);
+    const currentTimestamp = Date.now();
 
-    if (lockValue) {
-      const lockTime = parseInt(lockValue, 10);
-      if (now - lockTime < 5000) {
+    if (existingLockTimestamp) {
+      const lockAge = currentTimestamp - parseInt(existingLockTimestamp, 10);
+
+      if (lockAge < this.MIGRATION_LOCK_TIMEOUT_MILLISECONDS) {
         return false;
       }
     }
 
-    // Acquire lock
-    localStorage.setItem(this.migrationLockKey, now.toString());
+    localStorage.setItem(this.CONCURRENT_MIGRATION_LOCK_KEY, currentTimestamp.toString());
     return true;
   }
 
-  private releaseMigrationLock(): void {
-    localStorage.removeItem(this.migrationLockKey);
+  private releaseConcurrentMigrationLock(): void {
+    localStorage.removeItem(this.CONCURRENT_MIGRATION_LOCK_KEY);
   }
 
   private getSchemaVersion(): number {
-    const versionString = localStorage.getItem(this.schemaVersionKey);
+    const versionString = localStorage.getItem(this.SCHEMA_VERSION_KEY);
     return versionString ? parseInt(versionString, 10) : 0;
   }
 
   private setSchemaVersion(version: number): void {
-    localStorage.setItem(this.schemaVersionKey, version.toString());
+    localStorage.setItem(this.SCHEMA_VERSION_KEY, version.toString());
   }
 
   private migrateSchema(fromVersion: number, toVersion: number): void {
