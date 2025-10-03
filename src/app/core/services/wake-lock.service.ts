@@ -1,10 +1,23 @@
 import { Injectable } from '@angular/core';
 
+// Type definition for Wake Lock API
+interface WakeLockSentinel {
+  readonly released: boolean;
+  readonly type: string;
+  release(): Promise<void>;
+  addEventListener(type: 'release', listener: () => void): void;
+  removeEventListener(type: 'release', listener: () => void): void;
+}
+
+interface WakeLockAPI {
+  request(type: 'screen'): Promise<WakeLockSentinel>;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class WakeLockService {
-  private activeWakeLock: any = null;
+  private activeWakeLock: WakeLockSentinel | null = null;
   private isWakeLockSupported = 'wakeLock' in navigator;
 
   async request(): Promise<boolean> {
@@ -14,7 +27,8 @@ export class WakeLockService {
     }
 
     try {
-      this.activeWakeLock = await (navigator as any).wakeLock.request('screen');
+      const wakeLock = (navigator as Navigator & { wakeLock: WakeLockAPI }).wakeLock;
+      this.activeWakeLock = await wakeLock.request('screen');
 
       this.activeWakeLock.addEventListener('release', () => {
         console.log('Wake Lock released');

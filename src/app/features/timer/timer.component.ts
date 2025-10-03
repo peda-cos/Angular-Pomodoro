@@ -71,6 +71,7 @@ export class TimerComponent implements OnInit, OnDestroy {
   readonly isIdle = computed(() => this.timerState().status === 'idle');
 
   private previousTimerStatus = this.timerState().status;
+  private animationFrameId: number | null = null;
 
   ngOnInit(): void {
     if (this.isIdle()) {
@@ -89,6 +90,12 @@ export class TimerComponent implements OnInit, OnDestroy {
     this.keyboardService.unregisterHandler('reset');
     this.keyboardService.unregisterHandler('skip-next');
     this.wakeLockService.release();
+
+    // Clean up animation frame to prevent memory leak
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
   }
 
   private watchForSessionCompletion(): void {
@@ -98,21 +105,25 @@ export class TimerComponent implements OnInit, OnDestroy {
         this.handleSessionCompletion();
       }
       this.previousTimerStatus = currentTimerStatus;
-      requestAnimationFrame(checkForCompletion);
+      this.animationFrameId = requestAnimationFrame(checkForCompletion);
     };
-    checkForCompletion();
+    this.animationFrameId = requestAnimationFrame(checkForCompletion);
   }
 
   private async handleSessionCompletion(): Promise<void> {
-    const sessionType = this.timerState().sessionType;
-    const currentSettings = this.settings();
+    try {
+      const sessionType = this.timerState().sessionType;
+      const currentSettings = this.settings();
 
-    if (!this.shouldMuteSessionCompletionSound()) {
-      await this.audioService.playSound(currentSettings.soundTheme, currentSettings.volume);
+      if (!this.shouldMuteSessionCompletionSound()) {
+        await this.audioService.playSound(currentSettings.soundTheme, currentSettings.volume);
+      }
+
+      await this.notificationService.notifySessionComplete(sessionType);
+      await this.wakeLockService.release();
+    } catch (error) {
+      console.error('Error handling session completion:', error);
     }
-
-    await this.notificationService.notifySessionComplete(sessionType);
-    await this.wakeLockService.release();
   }
 
   private shouldMuteSessionCompletionSound(): boolean {
@@ -126,23 +137,27 @@ export class TimerComponent implements OnInit, OnDestroy {
   }
 
   async togglePlayPause(): Promise<void> {
-    const currentTimerStatus = this.timerState().status;
+    try {
+      const currentTimerStatus = this.timerState().status;
 
-    if (currentTimerStatus === 'running') {
-      this.timerService.pause();
-      await this.wakeLockService.release();
-    } else {
-      if (this.notificationService.permission() === 'default') {
-        await this.notificationService.requestPermission();
+      if (currentTimerStatus === 'running') {
+        this.timerService.pause();
+        await this.wakeLockService.release();
+      } else {
+        if (this.notificationService.permission() === 'default') {
+          await this.notificationService.requestPermission();
+        }
+
+        this.timerService.start(this.settings());
+
+        if (this.timerState().sessionType === 'work') {
+          await this.wakeLockService.request();
+        }
+
+        await this.notificationService.notifySessionStart(this.timerState().sessionType);
       }
-
-      this.timerService.start(this.settings());
-
-      if (this.timerState().sessionType === 'work') {
-        await this.wakeLockService.request();
-      }
-
-      await this.notificationService.notifySessionStart(this.timerState().sessionType);
+    } catch (error) {
+      console.error('Error toggling play/pause:', error);
     }
   }
 

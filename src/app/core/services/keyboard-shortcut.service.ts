@@ -1,4 +1,4 @@
-import { effect, Injectable, signal } from '@angular/core';
+import { effect, Injectable, OnDestroy, signal } from '@angular/core';
 import {
   DEFAULT_SHORTCUTS,
   KeyboardShortcut,
@@ -13,21 +13,28 @@ export type ShortcutHandler = () => void;
 @Injectable({
   providedIn: 'root',
 })
-export class KeyboardShortcutService {
+export class KeyboardShortcutService implements OnDestroy {
   private readonly shortcutsSignal = signal<KeyboardShortcut[]>([...DEFAULT_SHORTCUTS]);
   private readonly shortcutHandlerRegistry = new Map<ShortcutAction, ShortcutHandler>();
   private readonly isEnabledSignal = signal(true);
+  private readonly keydownHandler: (event: KeyboardEvent) => void;
 
   readonly allShortcuts = this.shortcutsSignal.asReadonly();
   readonly isEnabled = this.isEnabledSignal.asReadonly();
 
   constructor(private storage: StorageService) {
     this.loadShortcutsFromStorage();
+
+    this.keydownHandler = (event: KeyboardEvent) => this.handleKeydown(event);
     this.setupGlobalKeyboardListener();
 
     effect(() => {
       this.storage.set(KEYBOARD_SHORTCUTS_STORAGE_KEY, this.shortcutsSignal());
     });
+  }
+
+  ngOnDestroy(): void {
+    document.removeEventListener('keydown', this.keydownHandler);
   }
 
   private loadShortcutsFromStorage(): void {
@@ -38,37 +45,39 @@ export class KeyboardShortcutService {
   }
 
   private setupGlobalKeyboardListener(): void {
-    document.addEventListener('keydown', (event: KeyboardEvent) => {
-      if (!this.isEnabledSignal()) {
-        return;
-      }
+    document.addEventListener('keydown', this.keydownHandler);
+  }
 
-      const targetElement = event.target as HTMLElement;
-      if (
-        targetElement.tagName === 'INPUT' ||
-        targetElement.tagName === 'TEXTAREA' ||
-        targetElement.isContentEditable
-      ) {
-        return;
-      }
+  private handleKeydown(event: KeyboardEvent): void {
+    if (!this.isEnabledSignal()) {
+      return;
+    }
 
-      const matchedShortcut = this.findMatchingShortcut(event);
-      if (matchedShortcut) {
-        event.preventDefault();
-        const shortcutHandler = this.shortcutHandlerRegistry.get(matchedShortcut.action);
-        if (shortcutHandler) {
-          shortcutHandler();
-        }
+    const targetElement = event.target as HTMLElement;
+    if (
+      targetElement.tagName === 'INPUT' ||
+      targetElement.tagName === 'TEXTAREA' ||
+      targetElement.isContentEditable
+    ) {
+      return;
+    }
+
+    const matchedShortcut = this.findMatchingShortcut(event);
+    if (matchedShortcut) {
+      event.preventDefault();
+      const shortcutHandler = this.shortcutHandlerRegistry.get(matchedShortcut.action);
+      if (shortcutHandler) {
+        shortcutHandler();
       }
-    });
+    }
   }
 
   private findMatchingShortcut(keyboardEvent: KeyboardEvent): KeyboardShortcut | undefined {
     return this.shortcutsSignal().find((shortcut) => {
       const keyMatches = shortcut.key.toLowerCase() === keyboardEvent.key.toLowerCase();
-      const ctrlMatches = !shortcut.modifiers?.ctrl || keyboardEvent.ctrlKey;
-      const altMatches = !shortcut.modifiers?.alt || keyboardEvent.altKey;
-      const shiftMatches = !shortcut.modifiers?.shift || keyboardEvent.shiftKey;
+      const ctrlMatches = shortcut.modifiers?.ctrl ? keyboardEvent.ctrlKey : !keyboardEvent.ctrlKey;
+      const altMatches = shortcut.modifiers?.alt ? keyboardEvent.altKey : !keyboardEvent.altKey;
+      const shiftMatches = shortcut.modifiers?.shift ? keyboardEvent.shiftKey : !keyboardEvent.shiftKey;
 
       return keyMatches && ctrlMatches && altMatches && shiftMatches;
     });

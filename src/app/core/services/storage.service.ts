@@ -12,6 +12,7 @@ const CURRENT_SCHEMA_VERSION = 1;
 export class StorageService {
   private readonly storageKeyPrefix = 'pomodoro_';
   private readonly schemaVersionKey = `${this.storageKeyPrefix}version`;
+  private readonly migrationLockKey = `${this.storageKeyPrefix}migration_lock`;
 
   constructor() {
     this.checkSchemaVersionAndMigrate();
@@ -20,9 +21,42 @@ export class StorageService {
   private checkSchemaVersionAndMigrate(): void {
     const currentStoredVersion = this.getSchemaVersion();
     if (currentStoredVersion < CURRENT_SCHEMA_VERSION) {
-      this.migrateSchema(currentStoredVersion, CURRENT_SCHEMA_VERSION);
-      this.setSchemaVersion(CURRENT_SCHEMA_VERSION);
+      if (this.acquireMigrationLock()) {
+        try {
+          this.migrateSchema(currentStoredVersion, CURRENT_SCHEMA_VERSION);
+          this.setSchemaVersion(CURRENT_SCHEMA_VERSION);
+        } finally {
+          this.releaseMigrationLock();
+        }
+      } else {
+        setTimeout(() => {
+          const newVersion = this.getSchemaVersion();
+          if (newVersion < CURRENT_SCHEMA_VERSION) {
+            this.checkSchemaVersionAndMigrate();
+          }
+        }, 100);
+      }
     }
+  }
+
+  private acquireMigrationLock(): boolean {
+    const lockValue = localStorage.getItem(this.migrationLockKey);
+    const now = Date.now();
+
+    if (lockValue) {
+      const lockTime = parseInt(lockValue, 10);
+      if (now - lockTime < 5000) {
+        return false;
+      }
+    }
+
+    // Acquire lock
+    localStorage.setItem(this.migrationLockKey, now.toString());
+    return true;
+  }
+
+  private releaseMigrationLock(): void {
+    localStorage.removeItem(this.migrationLockKey);
   }
 
   private getSchemaVersion(): number {
