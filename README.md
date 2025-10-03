@@ -48,14 +48,14 @@ A aplicação segue uma arquitetura modular e componentizada baseada nas melhore
 ```
 src/app/
 ├── core/                    # Funcionalidades principais
-│   ├── models/             # Interfaces e tipos
-│   └── services/           # Serviços compartilhados
-├── features/               # Funcionalidades por domínio
-│   ├── timer/             # Componente de timer
-│   ├── tasks/             # Gerenciamento de tarefas
-│   ├── statistics/        # Estatísticas e relatórios
-│   └── settings/          # Configurações
-└── app.ts                 # Componente raiz
+│   ├── models/              # Interfaces e tipos
+│   └── services/            # Serviços compartilhados
+├── features/                # Funcionalidades por domínio
+│   ├── timer/               # Componente de timer
+│   ├── tasks/               # Gerenciamento de tarefas
+│   ├── statistics/          # Estatísticas e relatórios
+│   └── settings/            # Configurações
+└── app.ts                   # Componente raiz
 ```
 
 ### Serviços Principais
@@ -118,35 +118,35 @@ src/app/
 ## 📁 Estrutura do Projeto
 
 ```
-pomodoro-app/
-├── docker/                          # Configurações Docker
-│   └── nginx.conf                   # Configuração Nginx otimizada
-├── public/                          # Assets estáticos
+Angular-Pomodoro/
+├── docker/                         # Configurações Docker
+│   └── nginx.conf                  # Configuração Nginx otimizada
+├── public/                         # Assets estáticos
 │   ├── manifest.webmanifest        # Manifesto PWA
 │   ├── favicon.ico
 │   └── icons/                      # Ícones PWA (múltiplos tamanhos)
 ├── src/
 │   ├── app/
 │   │   ├── core/                   # Núcleo da aplicação
-│   │   │   ├── models/            # Modelos de dados TypeScript
-│   │   │   └── services/          # Serviços injetáveis
-│   │   ├── features/              # Componentes de funcionalidades
+│   │   │   ├── models/             # Modelos de dados TypeScript
+│   │   │   └── services/           # Serviços injetáveis
+│   │   ├── features/               # Componentes de funcionalidades
 │   │   │   ├── timer/
 │   │   │   ├── tasks/
 │   │   │   ├── statistics/
 │   │   │   └── settings/
-│   │   ├── app.config.ts          # Configuração da aplicação
-│   │   ├── app.routes.ts          # Definição de rotas
-│   │   └── app.ts                 # Componente raiz
+│   │   ├── app.config.ts           # Configuração da aplicação
+│   │   ├── app.routes.ts           # Definição de rotas
+│   │   └── app.ts                  # Componente raiz
 │   ├── index.html                  # HTML principal
 │   ├── main.ts                     # Entry point da aplicação
 │   └── styles.scss                 # Estilos globais
-├── angular.json                     # Configuração Angular CLI
+├── angular.json                    # Configuração Angular CLI
 ├── docker-compose.yml              # Orquestração Docker
-├── Dockerfile                       # Multi-stage build
+├── Dockerfile                      # Multi-stage build
 ├── ngsw-config.json                # Configuração Service Worker
-├── package.json                     # Dependências NPM
-└── tsconfig.json                    # Configuração TypeScript
+├── package.json                    # Dependências NPM
+└── tsconfig.json                   # Configuração TypeScript
 ```
 
 ## 🚀 Como Começar
@@ -162,7 +162,7 @@ pomodoro-app/
 1. **Clone o repositório**
 ```bash
 git clone <url-do-repositorio>
-cd pomodoro-app
+cd Angular-Pomodoro
 ```
 
 2. **Instale as dependências**
